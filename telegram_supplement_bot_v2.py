@@ -8,7 +8,7 @@ from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler, ContextTypes
 
 # 설정
-TOKEN = os.environ.get("7832014763:AAEJBwoFKJDhTXjvLQEt9wkAgtVi-3xgyf0")
+TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN")
 USER_ID = None
 DATA_FILE = "supplement_state.json"
 CONFIG_FILE = "supplement_config.json"

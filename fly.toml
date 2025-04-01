@@ -1,4 +1,4 @@
-app = "telegram-supplement-bot"
+app = "supplement"
 
 [build]
   dockerfile = "Dockerfile"

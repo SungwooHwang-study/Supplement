@@ -1,7 +1,7 @@
 app = "telegram-supplement-bot"
 
 [env]
-  TELEGRAM_BOT_TOKEN="your_bot_token_here"
+  TELEGRAM_BOT_TOKEN="7832014763:AAEJBwoFKJDhTXjvLQEt9wkAgtVi-3xgyf0"
 
 [[services]]
   internal_port = 8080

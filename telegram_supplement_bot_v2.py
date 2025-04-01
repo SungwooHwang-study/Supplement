@@ -143,19 +143,18 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("✅ 영양제 루틴 봇을 시작합니다.")
     await update_pin(context.bot)
 
-# 시간 설정
+# 시간 체크
+
 async def set_time(update: Update, context: ContextTypes.DEFAULT_TYPE):
     args = context.args
     if len(args) != 2 or args[0] not in ["morning", "evening", "night"]:
         await update.message.reply_text("❗ 사용법: /settime [morning|evening|night] [HH:MM]")
         return
-
     config = load_config()
     config["times"][args[0]] = args[1]
     save_config(config)
     await update.message.reply_text(f"⏰ {args[0].capitalize()} 알림 시간이 {args[1]}로 설정되었습니다.")
 
-# 리마인더 체크
 async def reminder_task(bot):
     state = load_state()
     for time_key in ["morning", "evening", "night"]:
@@ -163,7 +162,7 @@ async def reminder_task(bot):
             last_time = datetime.fromisoformat(state["last_check"][time_key])
             if datetime.now() - last_time > timedelta(minutes=reminder_delay_minutes):
                 checklist = build_checklist(time_key, load_config())
-                text = f"⏰ [리마인더] {time_key.upper()} 루틴 체크 안 하셨습니다!\n\n{checklist}"
+                text = f"⏰ [리마인더] {time_key.upper()} 루틴 체크 안 하셨습니다!\\n\\n{checklist}"
                 buttons = [[InlineKeyboardButton("✅ 지금 복용 완료", callback_data=f"{time_key}_done")]]
                 markup = InlineKeyboardMarkup(buttons)
                 await bot.send_message(chat_id=USER_ID, text=text, reply_markup=markup)

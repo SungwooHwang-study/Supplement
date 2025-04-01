@@ -1,0 +1,10 @@
+app = "telegram-supplement-bot"
+
+[env]
+  TELEGRAM_BOT_TOKEN="your_bot_token_here"
+
+[[services]]
+  internal_port = 8080
+  protocol = "tcp"
+  auto_start_machines = true
+  auto_stop_machines = true

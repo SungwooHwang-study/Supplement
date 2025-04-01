@@ -1,7 +1,10 @@
 app = "telegram-supplement-bot"
 
+[build]
+  dockerfile = "Dockerfile"
+
 [env]
-  TELEGRAM_BOT_TOKEN="7832014763:AAEJBwoFKJDhTXjvLQEt9wkAgtVi-3xgyf0"
+  TELEGRAM_BOT_TOKEN="dummy_token"
 
 [[services]]
   internal_port = 8080

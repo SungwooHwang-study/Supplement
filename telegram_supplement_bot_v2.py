@@ -6,6 +6,7 @@ import os
 import pytz
 import asyncio
 import threading
+from functools import partial
 from datetime import datetime, timedelta
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler, ContextTypes
@@ -26,7 +27,7 @@ default_routine = {
         "프로바이오틱스",
         "비오틴",
         "글리신 + 테아닌",
-        "B Complex"
+        "B Complex",
         "비타민 C 1000mg (공복)",
         "비타민 C 1000mg (아침 식후)"
     ],
@@ -37,11 +38,11 @@ default_routine = {
         "인돌3카비놀",
         "아연 + 구리",
         "CoQ10",
-        "NAC"
+        "NAC",
         "비타민 C 1000mg (저녁 식후)"
     ],
     "night": [
-        "마그네슘"
+        "마그네슘",
         "글리신 + 테아닌",
         "비타민 C 1000mg (취침 전)"
     ]
@@ -173,12 +174,26 @@ async def reminder_task(bot):
 # 시간을 한국시간에 설정
 KST = pytz.timezone("Asia/Seoul")
 
+def convert_kst_to_utc_string(kst_time_str):
+    """HH:MM 형식의 KST 문자열을 UTC 문자열로 변환"""
+    kst_time = datetime.strptime(kst_time_str, "%H:%M")
+    today = datetime.now(KST).date()
+    kst_dt = KST.localize(datetime.combine(today, kst_time.time()))
+    utc_dt = kst_dt.astimezone(pytz.utc)
+    return utc_dt.strftime("%H:%M")
+
 # 스케줄러
 def schedule_tasks(app, loop):
     config = load_config()
     for time_key in ["morning", "evening", "night"]:
-        schedule.every().day.at(config["times"][time_key]).do(
-            lambda tk=time_key: asyncio.run_coroutine_threadsafe(send_checklist(app.bot, tk), loop)
+        kst_time = config["times"][time_key]
+        utc_time = convert_kst_to_utc_string(kst_time)
+        schedule.every().day.at(utc_time).do(
+            partial(
+                asyncio.run_coroutine_threadsafe,
+                partial(send_checklist, app.bot, time_key),
+                loop
+            )
         )
     while True:
         schedule.run_pending()
@@ -190,12 +205,24 @@ def periodic_reminder(app, loop):
         time.sleep(60)
         asyncio.run_coroutine_threadsafe(reminder_task(app.bot), loop)
 
+async def show_times(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    config = load_config()
+    times = config["times"]
+    msg = (
+        "🕰️ 현재 알림 시간 (KST 기준):\n"
+        f"☀️ 아침: {times['morning']}\n"
+        f"🌇 저녁: {times['evening']}\n"
+        f"🌙 취침: {times['night']}"
+    )
+    await update.message.reply_text(msg)
+
 # 실행
 def main():
     app = ApplicationBuilder().token(TOKEN).build()
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("settime", set_time))
     app.add_handler(CallbackQueryHandler(button_handler))
+    app.add_handler(CommandHandler("showtimes", show_times))
 
     loop = asyncio.get_event_loop()  
 

@@ -13,7 +13,7 @@ from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandle
 
 # 설정
 TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN")
-USER_ID = None
+USER_ID = int(os.environ.get("TELEGRAM_USER_ID"))
 DATA_FILE = "supplement_state.json"
 CONFIG_FILE = "supplement_config.json"
 PINNED_MSG_ID_FILE = "pinned_msg_id.txt"
@@ -150,15 +150,23 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 # 시간 체크
 
+from schedule import clear
+
 async def set_time(update: Update, context: ContextTypes.DEFAULT_TYPE):
     args = context.args
     if len(args) != 2 or args[0] not in ["morning", "evening", "night"]:
         await update.message.reply_text("❗ 사용법: /settime [morning|evening|night] [HH:MM]")
         return
+
     config = load_config()
     config["times"][args[0]] = args[1]
     save_config(config)
     await update.message.reply_text(f"⏰ {args[0].capitalize()} 알림 시간이 {args[1]}로 설정되었습니다.")
+
+    # ✅ schedule 다시 등록
+    clear()  # 기존 스케줄 제거
+    loop = asyncio.get_event_loop()
+    threading.Thread(target=schedule_tasks, args=(context.application, loop), daemon=True).start()
 
 async def reminder_task(bot):
     state = load_state()

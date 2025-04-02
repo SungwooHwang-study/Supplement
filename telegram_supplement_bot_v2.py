@@ -189,13 +189,14 @@ def schedule_tasks(app, loop):
     for time_key in ["morning", "evening", "night"]:
         kst_time = config["times"][time_key]
         utc_time = convert_kst_to_utc_string(kst_time)
-        print(f"⏰ 스케줄 등록: {time_key} → KST {kst_time} / UTC {utc_time}")  # 디버깅용
+        print(f"⏰ 스케줄 등록: {time_key} → KST {kst_time} / UTC {utc_time}")  # 이거만 남기세요
         job = partial(asyncio.run_coroutine_threadsafe, send_checklist(app.bot, time_key), loop)
         schedule.every().day.at(utc_time).do(job)
 
-    print(f"📅 스케줄 작업 등록됨: {time_key} (UTC: {utc_time})")
+    print("📅 모든 스케줄 등록 완료.")
 
     while True:
+        print("⏳ schedule tick:", datetime.utcnow().isoformat())  # UTC 시간 기준
         schedule.run_pending()
         time.sleep(30)
 

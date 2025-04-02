@@ -1,83 +1,97 @@
-
 # 🧠 Telegram Supplement Routine Bot
 
-AI 기반 건강 루틴 관리 봇  
-매일 정해진 시간에 영양제 복용 체크리스트를 텔레그램으로 알려주고,  
-사용자가 버튼 클릭으로 복용을 기록하면 자동으로 Day를 관리해주는 건강 루틴 전용 봇입니다.
+Telegram을 통해 아침/저녁/취침 루틴에 맞춘 영양제 체크리스트를 알림 및 관리해주는 개인용 봇입니다.
+
+> ✅ KST(한국 시간) 기준으로 루틴 시간 설정  
+> ✅ 하루 루틴 완료 여부를 Day n 단위로 관리  
+> ✅ 알림 버튼을 통해 Telegram 내에서 바로 체크  
+> ✅ Fly.io 무료 서버에서 항상 작동  
+> ✅ 누락 시 자동 리마인더 전송
 
 ---
 
-## 📦 주요 기능
+## 🚀 배포 환경
 
-- ✅ 시간별 복용 루틴 자동 알림 (아침 / 저녁 / 취침 전)
-- ✅ "복용 완료" 버튼으로 체크
-- ✅ 하루 3번 완료 시 Day +1
-- 📌 텔레그램 핀 메시지로 현재 진행 상태 표시 (아이폰 위젯 대응)
-- 🔔 복용 누락 시 자동 리마인더 전송
-- 🔄 루틴 누락 시 Day 유지 (자동 보정)
-- ⏰ `/settime` 명령어로 시간 변경 가능
+- **Python 3.10+**
+- **Fly.io** (무료 서버 호스팅)
+- **Telegram Bot API**
+- **`python-telegram-bot` 라이브러리**
 
 ---
 
-## 🚀 설치 및 실행
+## ⚙️ 기능 요약
 
-### 1. GitHub 클론
+| 기능 | 설명 |
+|------|------|
+| `/start` | 루틴 봇 시작 및 사용자 등록 |
+| `/settime [time_key] [HH:MM]` | 루틴 알림 시간 설정 (`morning`, `evening`, `night`) |
+| `/showtimes` | 현재 설정된 알림 시간 (KST 기준) 확인 |
+| 체크리스트 자동 알림 | 아침, 저녁, 취침 루틴 시간에 맞춰 자동 전송 |
+| ✅ 버튼 | 각 루틴 완료 체크, 하루 루틴 완료 시 자동 다음 Day로 이동 |
+| 자동 리마인더 | 루틴 미체크 시 50분 후 알림 재전송 |
+
+---
+
+## 🕒 기본 루틴 시간 (KST 기준)
+
+| 구분 | 시간 | 루틴 항목 예시 |
+|------|------|----------------|
+| 아침 (`morning`) | 09:00 | 투퍼데이, 비오틴, 시트룰린, 글리신, 비타민C 등 |
+| 저녁 (`evening`) | 20:30 | SAT, 인돌3카비놀, 오메가3, CoQ10 등 |
+| 취침 전 (`night`) | 23:30 | 마그네슘, 글리신, 비타민 C 등 |
+
+시간은 `/settime` 명령어로 언제든지 바꿀 수 있어요.
+
+---
+
+## 📦 설치 및 실행
+
+### 1. Telegram Bot Token 준비
+[BotFather](https://t.me/BotFather)를 통해 토큰을 발급받습니다.
+
+### 2. `.env` 또는 Fly.io 환경변수에 등록
+
+```
+TELEGRAM_BOT_TOKEN=your_bot_token_here
+```
+
+### 3. Fly.io 배포
 
 ```bash
-git clone https://github.com/your-username/supplement-routine-bot.git
-cd supplement-routine-bot
+fly launch
+fly deploy
 ```
 
-### 2. 패키지 설치
+`fly.toml` 및 `Dockerfile` 설정 완료된 상태에서 바로 배포됩니다.
 
-```bash
-pip install -r requirements.txt
+---
+
+## 🛠️ 커스터마이징
+
+- 루틴 항목은 `default_routine` 변수에서 직접 수정 가능
+- 알림 간격은 `reminder_delay_minutes` (기본 50분)으로 조절 가능
+- 루틴 항목 개수 제한 없음 (10개 이상도 OK)
+
+---
+
+## 👀 예시 화면
+
 ```
+🕘 [Day 4] MORNING 루틴입니다!
 
-### 3. 환경 변수 설정
+☑️ 투퍼데이 (1정)
+☑️ 엘카르니틴
+☑️ 비오틴
+☑️ 비타민 C 1000mg (공복)
 
-`.env` 또는 Railway 대시보드에서 아래 환경변수를 추가하세요:
-
-```
-TELEGRAM_BOT_TOKEN=your_telegram_bot_token_here
+✅ 복용 완료
 ```
 
 ---
 
-## 🧑‍💻 실행
+## 📬 문의 및 개선 제안
 
-```bash
-python telegram_supplement_bot_v2.py
-```
+> 이 봇은 개인용으로 개발되었지만,  
+> 기능 확장이나 자동 통계, 루틴 최적화 알고리즘 등 다양한 기능 추가도 가능합니다.
 
----
-
-## ☁️ Railway 배포 방법
-
-1. Railway 계정 생성 및 로그인 [https://railway.app](https://railway.app)
-2. **New Project > Deploy from GitHub Repo**
-3. `TELEGRAM_BOT_TOKEN` 환경 변수 설정
-4. 자동 빌드 및 실행 완료 🎉
-
----
-
-## 🧾 명령어 요약
-
-| 명령어 | 기능 |
-|--------|------|
-| `/start` | 루틴 시작 및 사용자 등록 |
-| `/settime [시간대] [HH:MM]` | 루틴 알림 시간 변경 <br>예: `/settime morning 07:45` |
-
----
-
-## 📱 iPhone 위젯 활용법
-
-- 텔레그램 앱에서 대화방 핀 고정 시  
-  ➜ 현재 루틴 진행 상황이 위젯에 미리보기 형태로 표시됨  
-  ➜ 아이폰 홈화면에서 직접 루틴 상태 확인 가능
-
----
-
-## 📄 라이선스
-
-MIT License. 자유롭게 사용하고 커스터마이징하세요.
+필요하신 분은 언제든 문의 주세요 🙌

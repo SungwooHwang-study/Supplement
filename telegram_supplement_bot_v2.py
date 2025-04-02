@@ -173,8 +173,7 @@ async def reminder_task(bot):
 KST = pytz.timezone("Asia/Seoul")
 
 # 스케줄러
-def schedule_tasks(app):
-    loop = asyncio.get_event_loop()
+def schedule_tasks(app, loop):
     config = load_config()
     for time_key in ["morning", "evening", "night"]:
         schedule.every().day.at(config["times"][time_key]).do(
@@ -185,12 +184,11 @@ def schedule_tasks(app):
         time.sleep(30)
 
 # 주기적 리마인더 실행
-def periodic_reminder(app):
-    loop = asyncio.get_event_loop()  # 현재 루프 가져오기
+def periodic_reminder(app, loop):
     while True:
         time.sleep(60)
         asyncio.run_coroutine_threadsafe(reminder_task(app.bot), loop)
-
+        
 # 실행
 def main():
     app = ApplicationBuilder().token(TOKEN).build()
@@ -198,9 +196,10 @@ def main():
     app.add_handler(CommandHandler("settime", set_time))
     app.add_handler(CallbackQueryHandler(button_handler))
 
-    import threading
-    threading.Thread(target=schedule_tasks, args=(app,), daemon=True).start()
-    threading.Thread(target=periodic_reminder, args=(app,), daemon=True).start()
+    loop = asyncio.get_event_loop()  
+
+    threading.Thread(target=schedule_tasks, args=(app, loop), daemon=True).start()
+    threading.Thread(target=periodic_reminder, args=(app, loop), daemon=True).start()
 
     app.run_polling()
 

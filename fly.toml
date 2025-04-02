@@ -1,4 +1,4 @@
-app = "supplement"
+app = "supplement-bot"
 
 [build]
   dockerfile = "Dockerfile"
@@ -9,5 +9,5 @@ app = "supplement"
 [[services]]
   internal_port = 8080
   protocol = "tcp"
-  auto_start_machines = "start"
-  auto_stop_machines = "never" 
+  auto_start_machines = true
+  auto_stop_machines = false

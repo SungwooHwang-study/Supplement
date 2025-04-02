@@ -3,6 +3,7 @@ import json
 import schedule
 import time
 import os
+import pytz
 from datetime import datetime, timedelta
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler, ContextTypes
@@ -167,13 +168,19 @@ async def reminder_task(bot):
                 markup = InlineKeyboardMarkup(buttons)
                 await bot.send_message(chat_id=USER_ID, text=text, reply_markup=markup)
 
+# 시간을 한국시간에 설정
+KST = pytz.timezone("Asia/Seoul")
+
 # 스케줄러
 def schedule_tasks(app):
     config = load_config()
     for time_key in ["morning", "evening", "night"]:
-        schedule.every().day.at(config["times"][time_key]).do(lambda tk=time_key: app.create_task(send_checklist(app.bot, tk)))
-
+        # config["times"][time_key]은 문자열 (예: "09:00")
+        schedule.every().day.at(config["times"][time_key]).do(
+            lambda tk=time_key: app.create_task(send_checklist(app.bot, tk))
+        )
     while True:
+        now_kst = datetime.now(KST)
         schedule.run_pending()
         time.sleep(30)
 

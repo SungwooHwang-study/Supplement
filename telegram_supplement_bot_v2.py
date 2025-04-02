@@ -4,6 +4,7 @@ import schedule
 import time
 import os
 import pytz
+import asyncio
 from datetime import datetime, timedelta
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler, ContextTypes
@@ -173,22 +174,22 @@ KST = pytz.timezone("Asia/Seoul")
 
 # 스케줄러
 def schedule_tasks(app):
+    loop = asyncio.get_event_loop()
     config = load_config()
     for time_key in ["morning", "evening", "night"]:
-        # config["times"][time_key]은 문자열 (예: "09:00")
         schedule.every().day.at(config["times"][time_key]).do(
-            lambda tk=time_key: app.create_task(send_checklist(app.bot, tk))
+            lambda tk=time_key: asyncio.run_coroutine_threadsafe(send_checklist(app.bot, tk), loop)
         )
     while True:
-        now_kst = datetime.now(KST)
         schedule.run_pending()
         time.sleep(30)
 
 # 주기적 리마인더 실행
 def periodic_reminder(app):
+    loop = asyncio.get_event_loop()  # 현재 루프 가져오기
     while True:
         time.sleep(60)
-        app.create_task(reminder_task(app.bot))
+        asyncio.run_coroutine_threadsafe(reminder_task(app.bot), loop)
 
 # 실행
 def main():

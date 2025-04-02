@@ -163,10 +163,19 @@ async def set_time(update: Update, context: ContextTypes.DEFAULT_TYPE):
     save_config(config)
     await update.message.reply_text(f"⏰ {args[0].capitalize()} 알림 시간이 {args[1]}로 설정되었습니다.")
 
-    # ✅ schedule 다시 등록
+    # ✅ 스케줄 초기화 및 재등록
     clear()  # 기존 스케줄 제거
+
     loop = asyncio.get_event_loop()
-    threading.Thread(target=schedule_tasks, args=(context.application, loop), daemon=True).start()
+
+    # 💡 재등록: send_checklist를 coroutine으로 등록
+    for time_key in ["morning", "evening", "night"]:
+        kst_time = config["times"][time_key]
+        utc_time = convert_kst_to_utc_string(kst_time)
+        print(f"⏰ 스케줄 재등록: {time_key} → KST {kst_time} / UTC {utc_time}")
+        job = partial(asyncio.run_coroutine_threadsafe, send_checklist(context.bot, time_key), loop)
+        schedule.every().day.at(utc_time).do(job)
+
 
 async def reminder_task(bot):
     state = load_state()

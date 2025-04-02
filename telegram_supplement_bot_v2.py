@@ -5,6 +5,7 @@ import time
 import os
 import pytz
 import asyncio
+import threading
 from datetime import datetime, timedelta
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler, ContextTypes
@@ -188,7 +189,7 @@ def periodic_reminder(app, loop):
     while True:
         time.sleep(60)
         asyncio.run_coroutine_threadsafe(reminder_task(app.bot), loop)
-        
+
 # 실행
 def main():
     app = ApplicationBuilder().token(TOKEN).build()

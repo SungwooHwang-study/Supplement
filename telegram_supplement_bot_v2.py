@@ -91,6 +91,7 @@ def build_status_summary(state):
 
 # 알림 전송
 async def send_checklist(bot, time_key):
+    print(f"🔔 send_checklist 호출됨: {time_key} at {datetime.now()}")
     config = load_config()
     state = load_state()
     checklist = build_checklist(time_key, config)
@@ -188,13 +189,12 @@ def schedule_tasks(app, loop):
     for time_key in ["morning", "evening", "night"]:
         kst_time = config["times"][time_key]
         utc_time = convert_kst_to_utc_string(kst_time)
-        schedule.every().day.at(utc_time).do(
-            partial(
-                asyncio.run_coroutine_threadsafe,
-                partial(send_checklist, app.bot, time_key),
-                loop
-            )
-        )
+        print(f"⏰ 스케줄 등록: {time_key} → KST {kst_time} / UTC {utc_time}")  # 디버깅용
+        job = partial(asyncio.run_coroutine_threadsafe, send_checklist(app.bot, time_key), loop)
+        schedule.every().day.at(utc_time).do(job)
+
+    print(f"📅 스케줄 작업 등록됨: {time_key} (UTC: {utc_time})")
+
     while True:
         schedule.run_pending()
         time.sleep(30)
@@ -216,6 +216,10 @@ async def show_times(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
     await update.message.reply_text(msg)
 
+# schedule이 제대로 작동하는지 확인할 테스트용 명령 추가
+async def test_alarm(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await send_checklist(context.bot, "morning")
+
 # 실행
 def main():
     app = ApplicationBuilder().token(TOKEN).build()
@@ -223,6 +227,8 @@ def main():
     app.add_handler(CommandHandler("settime", set_time))
     app.add_handler(CallbackQueryHandler(button_handler))
     app.add_handler(CommandHandler("showtimes", show_times))
+    app.add_handler(CommandHandler("testalarm", test_alarm))
+
 
     loop = asyncio.get_event_loop()  
 

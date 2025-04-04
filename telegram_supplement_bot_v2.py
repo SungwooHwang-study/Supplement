@@ -217,8 +217,97 @@ async def forcecomplete(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     await update_pin(context.bot)
 
+# /remove 명령어
+async def remove(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    args = context.args
+    if not args or args[0] not in ["morning", "evening", "night"]:
+        await update.message.reply_text("❗ 사용법: /remove [morning|evening|night]")
+        return
+
+    time_key = args[0]
+    config = load_config()
+    items = config["routine"][time_key]
+
+    if not items:
+        await update.message.reply_text("❗ 삭제할 항목이 없습니다.")
+        return
+
+    buttons = [
+        [InlineKeyboardButton(f"❌ {item}", callback_data=f"remove_{time_key}_{i}")]
+        for i, item in enumerate(items)
+    ]
+    markup = InlineKeyboardMarkup(buttons)
+    await update.message.reply_text(f"🧹 {time_key.upper()} 루틴에서 삭제할 항목을 선택하세요:", reply_markup=markup)
+
+# 삭제 콜백 처리
+async def remove_button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+    data = query.data
+
+    if data.startswith("remove_"):
+        _, time_key, index = data.split("_")
+        index = int(index)
+
+        config = load_config()
+        try:
+            removed = config["routine"][time_key].pop(index)
+            save_config(config)
+            await query.edit_message_text(f"✅ `{removed}` 항목이 {time_key.upper()} 루틴에서 삭제되었습니다.")
+        except IndexError:
+            await query.edit_message_text("❗ 잘못된 인덱스입니다.")
+
+# 상태를 정의
+ADD_TIME, ADD_ITEM = range(2)
+
+# /add 진입 시
+async def add(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    buttons = [
+        [InlineKeyboardButton("☀️ 아침", callback_data="add_morning")],
+        [InlineKeyboardButton("🌇 저녁", callback_data="add_evening")],
+        [InlineKeyboardButton("🌙 취침", callback_data="add_night")]
+    ]
+    markup = InlineKeyboardMarkup(buttons)
+    await update.message.reply_text("➕ 어떤 시간대에 추가할까요?", reply_markup=markup)
+    return ADD_TIME
+
+# 시간대 버튼 클릭 후
+async def add_time_selected(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+    time_key = query.data.replace("add_", "")
+    context.user_data["add_time_key"] = time_key
+    await query.edit_message_text(f"📝 `{time_key.upper()}` 루틴에 추가할 항목을 입력해 주세요:")
+    return ADD_ITEM
+
+# 항목 입력 처리
+async def add_item_received(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    time_key = context.user_data.get("add_time_key")
+    new_item = update.message.text.strip()
+
+    config = load_config()
+    config["routine"][time_key].append(new_item)
+    save_config(config)
+
+    await update.message.reply_text(f"✅ `{new_item}` 항목이 `{time_key.upper()}` 루틴에 추가되었습니다.")
+    return ConversationHandler.END
+
+# 대화 취소 처리
+async def add_cancel(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("❌ 추가를 취소했습니다.")
+    return ConversationHandler.END
+
 
 def main():
+    add_conv = ConversationHandler(
+    entry_points=[CommandHandler("add", add)],
+    states={
+        ADD_TIME: [CallbackQueryHandler(add_time_selected, pattern="^add_")],
+        ADD_ITEM: [MessageHandler(filters.TEXT & ~filters.COMMAND, add_item_received)],
+    },
+    fallbacks=[CommandHandler("cancel", add_cancel)],
+)
+
     app = ApplicationBuilder().token(TOKEN).build()
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("settime", set_time))
@@ -227,6 +316,11 @@ def main():
     app.add_handler(CommandHandler("remind", remind))
     app.add_handler(CommandHandler("forcecomplete", forcecomplete))
     app.add_handler(CallbackQueryHandler(button_handler))
+    app.add_handler(CommandHandler("remove", remove))
+    app.add_handler(CallbackQueryHandler(remove_button_handler, pattern="^remove_"))
+    app.add_handler(add_conv)
+
+
     loop = asyncio.get_event_loop()
     threading.Thread(target=schedule_tasks, args=(app, loop), daemon=True).start()
     threading.Thread(target=periodic_reminder, args=(app, loop), daemon=True).start()

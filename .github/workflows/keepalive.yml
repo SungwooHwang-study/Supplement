@@ -1,0 +1,13 @@
+name: Keepalive Ping
+
+on:
+  schedule:
+    - cron: '50 23 * * *'  # 매일 UTC 23:50 → KST 오전 8:50
+    - cron: '0 */2 * * *'   # 2시간 간격으로도 예비 ping
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Curl to Fly.io App
+        run: curl https://supplement-bot.fly.dev

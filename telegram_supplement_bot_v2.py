@@ -187,10 +187,26 @@ async def remind(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("❗ 사용법: /remind [morning|evening|night]")
 
 async def forcecomplete(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    args = context.args
+    if len(args) != 1 or args[0] not in ["morning", "evening", "night"]:
+        await update.message.reply_text("❗ 사용법: /forcecomplete [morning|evening|night]")
+        return
+
+    time_key = args[0]
     state = load_state()
-    state["morning"] = state["evening"] = state["night"] = True
-    await update.message.reply_text("✔️ 모든 루틴을 강제로 완료 처리했습니다.")
-    await button_handler(update, context)
+    state[time_key] = True
+    save_state(state)
+
+    if all([state["morning"], state["evening"], state["night"]]):
+        state["day"] += 1
+        state["morning"] = state["evening"] = state["night"] = False
+        state["last_check"] = {}
+        save_state(state)
+        await update.message.reply_text(f"🎉 오늘 루틴 완료! Day {state['day']}로 넘어갑니다.")
+    else:
+        await update.message.reply_text(f"✅ {time_key.upper()} 루틴 강제 완료!")
+
+    await update_pin(context.bot)
 
 def main():
     app = ApplicationBuilder().token(TOKEN).build()

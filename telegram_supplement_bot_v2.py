@@ -60,6 +60,7 @@ def build_status_summary(state):
     return f"📆 Day {state['day']} 진행 현황\n✅ 아침: {'O' if state['morning'] else 'X'} | ✅ 저녁: {'O' if state['evening'] else 'X'} | ✅ 취침: {'O' if state['night'] else 'X'}"
 
 async def send_checklist(bot, time_key, custom_day=None):
+    print(f"⏰ send_checklist 실행됨: {time_key} at {datetime.now()}")
     config = load_config()
     state = load_state()
     day = state["day"] if custom_day is None else custom_day
@@ -149,17 +150,25 @@ def schedule_tasks(app, loop):
     for time_key in ["morning", "evening", "night"]:
         kst_time = config["times"][time_key]
         utc_time = convert_kst_to_utc_string(kst_time)
+        print(f"📅 스케줄 등록됨: {time_key} / KST: {kst_time} / UTC: {utc_time}")
         job = partial(asyncio.run_coroutine_threadsafe, send_checklist(app.bot, time_key), loop)
         schedule.every().day.at(utc_time).do(job)
 
+    # 아침 메시지
+    print("🌅 아침 루틴 메시지 등록됨")
     schedule.every().day.at(convert_kst_to_utc_string("08:00")).do(
         lambda: asyncio.run_coroutine_threadsafe(
             app.bot.send_message(chat_id=USER_ID, text="🌅 좋은 아침입니다! 오늘의 루틴을 확인해 주세요."), loop)
     )
 
     while True:
-        schedule.run_pending()
+        try:
+            print(f"🔁 schedule tick: {datetime.utcnow().isoformat()}")
+            schedule.run_pending()
+        except Exception as e:
+            print(f"❌ 스케줄 실행 중 오류 발생: {e}")
         time.sleep(30)
+
 
 def periodic_reminder(app, loop):
     while True:
@@ -207,6 +216,7 @@ async def forcecomplete(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(f"✅ {time_key.upper()} 루틴 강제 완료!")
 
     await update_pin(context.bot)
+
 
 def main():
     app = ApplicationBuilder().token(TOKEN).build()

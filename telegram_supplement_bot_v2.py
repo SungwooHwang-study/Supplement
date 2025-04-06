@@ -315,10 +315,10 @@ def main():
     app.add_handler(CommandHandler("testalarm", test_alarm))
     app.add_handler(CommandHandler("remind", remind))
     app.add_handler(CommandHandler("forcecomplete", forcecomplete))
-    app.add_handler(CallbackQueryHandler(button_handler))
     app.add_handler(CommandHandler("remove", remove))
-    app.add_handler(CallbackQueryHandler(remove_button_handler, pattern="^remove_"))
     app.add_handler(add_conv)
+    app.add_handler(CallbackQueryHandler(remove_button_handler, pattern="^remove_"))
+    app.add_handler(CallbackQueryHandler(button_handler))
 
 
     loop = asyncio.get_event_loop()

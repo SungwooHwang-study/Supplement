@@ -1,69 +1,60 @@
-# 💊 Telegram Supplement Routine Bot
+# Supplement Routine Telegram Bot
 
-개인 영양제 루틴 관리를 위한 Telegram 봇입니다. 매일 아침/저녁/취침 전 복용해야 하는 영양제를 체크리스트 형태로 알림 받고, 완료 여부를 기록합니다.
+A personal Telegram bot that helps you manage your supplement intake with daily routine checklists and reminders.
 
----
+## ✨ Features
 
-## 🧠 주요 기능
+- ✅ Interactive checklist buttons (morning/evening/night)
+- 🔔 Scheduled daily reminders (adjustable by `/settime`)
+- 🔁 Automatic day transition after completing all routines
+- 🌅 Good morning message at 08:00 KST
+- 🔃 `/remind [time]` to manually resend checklist (morning, evening, night)
+- 🛠️ `/forcecomplete [time]` to mark routine done manually
+- 🕰️ `/showtimes` to display current alarm times
+- 🧪 `/testalarm` to send test checklist
 
-### ✅ 루틴 알림 기능
-- 아침, 저녁, 밤 시간에 맞춰 복용해야 할 루틴을 알림 형태로 발송
-- 버튼을 눌러 복용 완료 체크 가능
-- 하루 3회 모두 완료 시 `Day +1` 진행
+## 📦 File Structure
 
-### ⏰ 시간별 알림 시간 설정
-- `/settime [morning|evening|night] [HH:MM]` 명령어로 한국시간 기준 변경 가능
-- `/showtimes` 명령어로 현재 알림 시간 확인
+- `supplement_state.json`: Tracks day & routine completion status
+- `supplement_config.json`: Stores routine items & alarm times
+- `telegram_supplement_bot_v2.py`: Main bot logic
 
-### 🔁 루틴 미완료 리마인더
-- 체크하지 않은 루틴이 50분 이상 지난 경우 리마인더 알림 자동 발송
+## 🛠️ Setup
 
-### 💬 매일 아침 자동 인삿말
-- 매일 아침 9시에 현재 루틴 현황을 자동으로 알려줍니다.
+1. Set secrets on [Fly.io](https://fly.io):
+    ```bash
+    fly secrets set TELEGRAM_BOT_TOKEN=<your_bot_token>
+    fly secrets set TELEGRAM_USER_ID=<your_user_id>
+    ```
 
-### 🛠 복구 기능 (`/복구` 또는 `/restore`)
-- 하루 내 또는 전날 깜빡 잊은 루틴 복용을 수동으로 완료할 수 있도록 안내
-- 완료되지 않은 시간대만 표시됨
+2. Deploy with Fly.io:
+    ```bash
+    fly deploy
+    ```
 
----
+3. Start bot by sending `/start` in Telegram.
 
-## 🚀 실행 방법
+## 🔄 Commands
 
-```bash
-git clone https://github.com/yourname/supplement-bot.git
-cd supplement-bot
-pip install -r requirements.txt
-export TELEGRAM_BOT_TOKEN=your_token
-export TELEGRAM_USER_ID=your_id
-python telegram_supplement_bot_v2.py
-```
+| Command               | Description |
+|------------------------|-------------|
+| `/start`              | Start the bot |
+| `/settime time HH:MM` | Set routine time (e.g., `/settime morning 09:30`) |
+| `/showtimes`          | Show current alarm times |
+| `/testalarm`          | Send a test checklist |
+| `/remind time`        | Manually resend checklist |
+| `/forcecomplete time` | Force complete a routine time manually |
 
----
+## ⏰ Timezone
 
-## ☁️ Fly.io 배포
-- `fly.toml`, `Dockerfile` 제공
-- GitHub Actions 자동 ping용 `.github/workflows/keepalive.yml` 포함
+All alarm times are set in **KST (Asia/Seoul)** and internally converted to UTC for scheduling.
 
----
+## 📌 Notes
 
-## 📁 파일 구조
-
-```
-.
-├── telegram_supplement_bot_v2.py   # 봇 메인 파일
-├── keepalive_server.py             # Fly.io 슬립 방지용 ping 서버
-├── .github/workflows/keepalive.yml # GitHub Actions로 자동 ping
-├── supplement_state.json           # 루틴 상태 저장
-├── supplement_config.json          # 루틴 구성 및 시간 저장
-├── README.md                       # 이 파일
-```
+- If you miss a day, you can manually remind yourself or force complete a section.
+- You can adjust times anytime with `/settime`.
+- The bot uses `schedule` + `asyncio` with threads for async reminders.
 
 ---
 
-## 🧪 테스트 명령어
-- `/testalarm` : 수동 알림 테스트용
-
----
-
-## 🧑‍💻 만든 이유
-루틴을 깜빡하거나 다시 체크하지 못하는 일이 잦아, 매일 반복되는 복용 루틴을 **버튼 하나로 간단하게 관리**하고 싶었습니다.
+> Created with ❤️ for personal supplement habit tracking

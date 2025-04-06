@@ -58,7 +58,3 @@ Telegram을 통해 **영양제 복용 루틴**을 관리할 수 있는 봇입니
   ```bash
   fly secrets set TELEGRAM_BOT_TOKEN=your_bot_token TELEGRAM_USER_ID=your_user_id
   ```
-
----
-
-Made with ❤️ by ChatGPT + 사용자
